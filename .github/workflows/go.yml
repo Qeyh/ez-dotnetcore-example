@@ -10,9 +10,10 @@ jobs:
   get-runner:
     runs-on: ubuntu-latest
     outputs:
-      RUNNER: ${{ runner.name }}
+      RUNNER: ${{ steps.set_output.outputs.runner }}
     steps:
-      - run: echo "selected runner = ${{ runner.name }}"
+      - id: set_output
+        run: echo "::set-output name=runner::ubuntu-latest"
         
   build:
     name: Build
@@ -20,23 +21,25 @@ jobs:
     runs-on: ${{needs.get-runner.outputs.RUNNER}}
     steps:
       - uses: actions/checkout@v3
-
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.20'
-
       - name: Build
         run: go build -v ./...
   
   test:
-    name: test
+    name: Test
     needs: build
     runs-on: ${{needs.get-runner.outputs.RUNNER}}
     steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
       - name: Test
         run: go test -v ./...
-        
       - name: golintr
         uses: norwd/golintr@v2.1.0
         with:
