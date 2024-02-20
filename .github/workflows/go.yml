@@ -25,9 +25,10 @@ jobs:
 
       - name: Test
         run: go test -v ./...
-
-      # Adding lint step
-      - name: Lint
-        uses: golangci/golangci-lint-action@v2
+        
+      - name: golintr
+        uses: norwd/golintr@v2.1.0
         with:
-          version: v1.45
+          path: ./...
+          
+
