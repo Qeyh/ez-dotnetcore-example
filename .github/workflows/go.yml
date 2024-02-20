@@ -1,6 +1,3 @@
-# This workflow will build a golang project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
 name: Go
 
 on:
@@ -10,38 +7,37 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  get-runner:
     runs-on: ubuntu-latest
+    outputs:
+      RUNNER: ${{ runner.name }}
+    steps:
+      - run: echo "selected runner = ${{ runner.name }}"
+        
+  build:
+    name: Build
+    needs: get-runner
+    runs-on: ${{needs.get-runner.outputs.RUNNER}}
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.20'
+
       - name: Build
         run: go build -v ./...
-        
+  
   test:
-    runs-on: ubuntu-latest
+    name: test
     needs: build
+    runs-on: ${{needs.get-runner.outputs.RUNNER}}
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.20'
       - name: Test
         run: go test -v ./...
-      - name: Lint
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: latest
         
-  docker:
-    runs-on: ubuntu-latest
-    needs: [test]
-    steps:
-      - uses: actions/checkout@v3
-      - name: Build and push Docker images
-        uses: docker/build-push-action@v2
-
+      - name: golintr
+        uses: norwd/golintr@v2.1.0
+        with:
+          path: ./...
